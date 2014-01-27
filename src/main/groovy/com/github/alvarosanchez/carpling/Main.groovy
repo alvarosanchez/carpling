@@ -90,7 +90,7 @@ class Main {
 
             }
 
-            sendMail(System.getProperty('email.to'), 'Carpling', foundTrips.toString())
+            sendMail(System.getProperty('email.to').split(','), 'Carpling', foundTrips.toString())
 
             browser.close()
             System.exit(0)
@@ -117,7 +117,7 @@ class Main {
         return db
     }
 
-    static void sendMail(String to, String subject, String message){
+    static void sendMail(String[] to, String subject, String message){
         def props = new Properties()
         props.put("mail.smtps.auth", "true")
 
@@ -127,7 +127,9 @@ class Main {
 
         msg.setSubject subject
         msg.setText message
-        msg.addRecipient Message.RecipientType.TO, new InternetAddress(to, to)
+        to.each { String email ->
+            msg.addRecipient Message.RecipientType.TO, new InternetAddress(email, email)
+        }
 
         def transport = session.getTransport "smtps"
 

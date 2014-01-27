@@ -1,6 +1,16 @@
 language: groovy
-
 before_install:
-  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
-
+- /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile
+  --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16
 script: gradle run
+env:
+  global:
+  - secure: yEsA5j4Z/0WbozUnywOSk8HLINyN6z//389j7H8WmYFBAVFzr/j0b4bUoWPG3K8T4X+22UURTNR1ch0W15dRIxaxg6rPtMberV5RfHjqCL2ESnbx0gfBpupLakgsyMwlytGuDs5g2AqU1j7KL8mpj3dCEOtciUV0JCTkWXUIpzs=
+  - secure: C8oqgAirZZKtGwMEzwaPgrNddhNDWf9Jumsc5OD9Nc+fwcwXEaxKXf3PCfEHY3c0vGKjxWSifvJnfwCjXSZjtx1EuIWQ5DPrO462irXa4lsmLOu3hr/8VQMrp2mwr+TROC5g/95gi/SEeEQsfjOlaispxYCwbfthF7DJ+URVfsA=
+  - secure: DSA/5Xghly/g85Pdfqnd4wsIyUHSaxeyEWmITNCucbCeHrfd9mEFwkYBvSy0HOOC+EfixfUO+76D4FVqm6ffvw/fAn8xLUEkQLP5rqXWiNI3h1P2Iw4yBP60i8SYMBNJdVoYp/y9kbHVoel2VKL9TiWGUkIdMiD+tJyq2Rsc9Zw=
+  - secure: tI6vfKFlE63LIp7b5yuG1dqeM9W0C1voP2YqvCJwS+P2o2ncV7nNy4nFhk1BupzQteg9UNn14OUx5rvxJG998sn9kLYdLA23pMk3cQFQVhWHy6jeGh4IeDOgrPojvYuiy7Ja2anq98fHMtJ9zE6g+egOqV0tUx23RQzTDm5JABk=
+  - secure: VlioA+pVpZ+J0eIkfZABTMdf1e50fFfEEyldh7zPDRSohcNshV/yW0W0Z9J9jf70sH5jrvt+Ebp2lFIc/bjdtquups+fjNnezhKLw+5j7RziUZyPk/aYybDVUoxi1BIFIUEY95yObT5crfzHdQNCGf+u4NgQ6Ao82L1S3yYIZMs=
+  - secure: wmx508/qS0rQuurhpFsvqcNs9CbVrK/S4/ZKFJdfrxPSQS7GuyBt6wS4C6y+7Uos/8oVMW2GkH0+KuNzRJiiXWLVsweHWJK/ikiue/EHvbm+8EXu87Bo0/+hP2MltD2WIKg9htOyyDg9lErPV6CVVc/9Z24SDTuEKi4fVhpsrgA=
+  - secure: u9f+AJQFpOTIOt/DP+YA/kxelTN8XYcE4oDnPzLNYKl0mB0ib/GQcGwxV2I3rKmy9y2FWPd1wtoouv0F137x+Lsgj7UCSciAEOaL9yUVqDyU8X0t+HpgJW6tazzxL1WUgViYacWzabr314obbJ+J5P15W27lxyylYnxt/BfFuNs=
+  - secure: RDTRLMJUPISroCsUQgUI6Z4qI6MwYFRF2pd1HBeq/ZIKe75H1wHrr1ZhN5EyD3lLSErv+p/WA8rVuc9orsWdOLOfZus2Hr1TDppmV5XHITEE2kMUwTE/sI+EWajeKX+f/r5P9ccfJ7O2a4jqmW6y6w/u3vjSVUsfDt8Dsx0Yb0w=
+  - secure: Ink6qW5PDx1A/t0IJ1A3/xRlMJZ5wMPOLEcQFvSG0tjZsuPn1SfYgiXbk2GYyp7GjksYPtx2BWM2L6FuIAgqwcwqxaXvsj6LODDGeSsmRHT8ORzSB4veQOKJ4NhbKb53SxmVTs//NKRQJBVt7rVkh1bdwWr6AbV3Sd1CKEAncOw=
