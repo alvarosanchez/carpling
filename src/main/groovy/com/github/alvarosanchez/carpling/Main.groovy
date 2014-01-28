@@ -33,8 +33,8 @@ class Main {
             browser.with {
                 go()
 
-                $('#login_form').user_email_login = System.getProperty('carpling_email')
-                $('#login_form').user_password_login = System.getProperty('carpling_password')
+                $('#login_form').user_email_login = System.getenv('carpling_email')
+                $('#login_form').user_password_login = System.getenv('carpling_password')
 
                 $('#login').click()
 
@@ -90,7 +90,7 @@ class Main {
 
             }
 
-            sendMail(System.getProperty('email_to').split(','), 'Carpling', foundTrips.toString())
+            sendMail(System.getenv('email_to').split(','), 'Carpling', foundTrips.toString())
 
             browser.close()
             System.exit(0)
@@ -102,11 +102,11 @@ class Main {
 
     static DB connectDB() {
         def config = [
-                server: System.getProperty('mongo_server'),
-                port: System.getProperty('MONGO_PORT'),
+                server: System.getenv('mongo_server'),
+                port: System.getenv('mongo_port'),
                 database: "carpling",
-                username: System.getProperty('mongo_username'),
-                password: System.getProperty('mongo_password')
+                username: System.getenv('mongo_username'),
+                password: System.getenv('mongo_password')
         ]
 
         def uri = "mongodb://${config.username}:${config.password}@${config.server}:${config.port}/${config.database}"
@@ -134,8 +134,8 @@ class Main {
         def transport = session.getTransport "smtps"
 
         def host = 'smtp.gmail.com'
-        def username = System.getProperty('email_username')
-        def password = System.getProperty('email_password')
+        def username = System.getenv('email_username')
+        def password = System.getenv('email_password')
 
         try {
             transport.connect (host, username, password)
