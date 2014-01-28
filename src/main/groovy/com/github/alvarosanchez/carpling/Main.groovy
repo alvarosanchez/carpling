@@ -103,7 +103,7 @@ class Main {
     static DB connectDB() {
         def config = [
                 server: System.getProperty('mongo_server'),
-                port: System.getProperty('mongo_port'),
+                port: System.getProperty('MONGO_PORT'),
                 database: "carpling",
                 username: System.getProperty('mongo_username'),
                 password: System.getProperty('mongo_password')
