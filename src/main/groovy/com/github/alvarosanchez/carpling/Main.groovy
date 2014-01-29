@@ -109,7 +109,7 @@ class Main {
 
     void storeTrip(TrainTrip trip, DBCollection dbCollection, List<TrainTrip> foundTrips) {
         if (!dbCollection.findOne(tripDate: trip.tripDate)) {
-            //dbCollection.insert(tripDate: tripDate, description: description)
+            dbCollection.insert(tripDate: trip.tripDate, description: trip.description)
             foundTrips << trip
         }
     }
@@ -133,43 +133,47 @@ class Main {
     }
 
     void sendMail(String[] to){
-        def props = new Properties()
-        props.put("mail.smtps.auth", "true")
+        if (this.foundRoundTrip || this.foundOneWay || this.foundReturn) {
+            def props = new Properties()
+            props.put("mail.smtps.auth", "true")
 
-        def session = Session.getDefaultInstance(props, null)
+            def session = Session.getDefaultInstance(props, null)
 
-        def msg = new MimeMessage(session)
+            def msg = new MimeMessage(session)
 
-        msg.setSubject 'Carpling'
-        msg.setFrom(new InternetAddress(System.getenv('email_username'), "Alvaro Sanchez-Mariscal"))
-        msg.setContent buildMessage(), "text/html; charset=utf-8"
-        to.each { String email ->
-            msg.addRecipient Message.RecipientType.TO, new InternetAddress(email, email)
-        }
+            msg.setSubject 'Carpling'
+            msg.setFrom(new InternetAddress(System.getenv('email_username'), "Alvaro Sanchez-Mariscal"))
+            msg.setContent buildMessage(), "text/html; charset=utf-8"
+            to.each { String email ->
+                msg.addRecipient Message.RecipientType.TO, new InternetAddress(email, email)
+            }
 
-        def transport = session.getTransport "smtps"
+            def transport = session.getTransport "smtps"
 
-        def host = 'smtp.gmail.com'
-        def username = System.getenv('email_username')
-        def password = System.getenv('email_password')
+            def host = 'smtp.gmail.com'
+            def username = System.getenv('email_username')
+            def password = System.getenv('email_password')
 
-        try {
-            log.info "Sending email..."
-            transport.connect (host, username, password)
-            transport.sendMessage (msg, msg.getAllRecipients())
-        }
-        catch (Exception e) {
-            log.error "OOPS"
-            e.printStackTrace()
+            try {
+                log.info "Sending email..."
+                transport.connect (host, username, password)
+                transport.sendMessage (msg, msg.getAllRecipients())
+            }
+            catch (Exception e) {
+                log.error "OOPS"
+                e.printStackTrace()
+            }
+        } else {
+            log.info "Nothing new found. Not sending any email"
         }
     }
 
     String buildMessage() {
         String message = "No he encontrado nada nuevo desde la última vez."
-        if (this.foundRoundTrip || this.foundOneWay || this.returnTrip) {
+        if (this.foundRoundTrip || this.foundOneWay || this.foundReturn) {
             message = """Hola,
 
-Esto es lo que he encontrado desde la última vez. Recuerda contactar con ellos en
+¡He econtrado billetes nuevos! Recuerda contactar con los usuarios en
 http://www.carpling.com/es/train/compro-billetes-de-tren-ave
 
 <h2>Ida y vuelta</h2>
