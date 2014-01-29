@@ -1,11 +1,13 @@
 package com.github.alvarosanchez.carpling
 
-import com.mongodb.DBCollection
-import geb.Browser
-
 import com.gmongo.GMongo
-import com.mongodb.MongoURI
 import com.mongodb.DB
+import com.mongodb.DBCollection
+import com.mongodb.MongoURI
+import geb.Browser
+import geb.navigator.Navigator
+import groovy.util.logging.Log4j
+import groovy.util.logging.Log4j2
 
 import javax.mail.Message
 import javax.mail.Session
@@ -15,35 +17,51 @@ import javax.mail.internet.MimeMessage
 /**
  * Created by mariscal on 26/01/14.
  */
+@Log4j
 class Main {
 
     static void main(final String[] args) {
+        new Main().run()
+    }
+
+    DB db
+    DBCollection roundTrip
+    DBCollection oneWay
+    DBCollection returnTrip
+
+    List<TrainTrip> foundRoundTrip = []
+    List<TrainTrip> foundOneWay = []
+    List<TrainTrip> foundReturn = []
+
+    def browser = new Browser()
+
+    Main() {
+        connectDB()
+        this.roundTrip = db.roundTrip
+        this.oneWay = db.oneWay
+        this.returnTrip = db.returnTrip
+        browser.baseUrl = "http://www.carpling.com/es/"
+    }
+
+
+    def run() {
         try {
-
-            DB db = connectDB()
-            DBCollection roundTrip = db.roundTrip
-            DBCollection oneWay = db.oneWay
-            DBCollection returnTrip = db.returnTrip
-
-            def foundTrips = []
-
-            def browser = new Browser()
-            browser.baseUrl = "http://www.carpling.com/es/"
-
             browser.with {
+                log.info "Navigating to Carpling home page..."
                 go()
 
+                log.info "Authenticating..."
                 $('#login_form').user_email_login = System.getenv('carpling_email')
                 $('#login_form').user_password_login = System.getenv('carpling_password')
-
                 $('#login').click()
 
                 go "train/compro-billetes-de-tren-ave"
 
                 waitFor {
-                    $('#route_form').displayed
+                    $('#route_form').displayed && $('#return_flag-1').displayed
                 }
 
+                log.info "Filling in search form..."
                 $('#route_form').f_location = '30'
                 $('#route_form').t_location = '28'
                 $('#return_flag-1').value('1')
@@ -54,70 +72,67 @@ class Main {
                     $('#onsale_counts h3 a').displayed
                 }
 
-                println "Ida y vuelta"
+                log.info "Parsing round trip tickets"
                 $('tr', id: contains('ec_tr_both')).each {
-                    def tripDate = it.find('td').first().text()
-                    def description = it.find('td')[1].text()
-                    def trip = [tripDate: tripDate, description: description]
-                    if (!roundTrip.findOne(tripDate: tripDate)) {
-                        roundTrip.insert(trip)
-                        foundTrips << trip
-                    }
-
+                    storeTrip(getTrip(it), this.roundTrip, this.foundRoundTrip)
                 }
 
-                println "Ida"
+                log.info "Parsing one way tickets"
                 $('tr', id: contains('ec_tr_go')).each {
-                    def tripDate = it.find('td').first().text()
-                    def description = it.find('td')[1].text()
-                    def trip = [tripDate: tripDate, description: description]
-                    if (!oneWay.findOne(tripDate: tripDate)) {
-                        oneWay.insert(trip)
-                        foundTrips << trip
-                    }
+                    storeTrip(getTrip(it), this.oneWay, this.foundOneWay)
                 }
 
-                println "Vuelta"
+                log.info "Parsing return tickets"
                 $('tr', id: contains('ec_tr_back')).each {
-                    def tripDate = it.find('td').first().text()
-                    def description = it.find('td')[1].text()
-                    def trip = [tripDate: tripDate, description: description]
-                    if (!returnTrip.findOne(tripDate: tripDate)) {
-                        returnTrip.insert(trip)
-                        foundTrips << trip
-                    }
+                    storeTrip(getTrip(it), this.returnTrip, this.foundReturn)
                 }
 
             }
 
-            sendMail(System.getenv('email_to').split(','), 'Carpling', foundTrips.toString())
+            sendMail(System.getenv('email_to').split(','))
 
             browser.close()
+            log.info "All done!"
             System.exit(0)
         } catch (e) {
+            log.error "OOPS"
             e.printStackTrace()
             System.exit(-1)
         }
     }
 
-    static DB connectDB() {
-        def config = [
-                server: System.getenv('mongo_server'),
-                port: System.getenv('mongo_port'),
-                database: "carpling",
-                username: System.getenv('mongo_username'),
-                password: System.getenv('mongo_password')
-        ]
-
-        def uri = "mongodb://${config.username}:${config.password}@${config.server}:${config.port}/${config.database}"
-        GMongo mongo = new GMongo(new MongoURI(uri))
-        DB db = mongo.getDB(config.database)
-        db.authenticate(config.username, config.password.toCharArray())
-
-        return db
+    TrainTrip getTrip(Navigator tr) {
+        def tripDate = tr.find('td').first().text()
+        def description = tr.find('td')[1].text()
+        new TrainTrip(tripDate: tripDate, description: description)
     }
 
-    static void sendMail(String[] to, String subject, String message){
+    void storeTrip(TrainTrip trip, DBCollection dbCollection, List<TrainTrip> foundTrips) {
+        if (!dbCollection.findOne(tripDate: trip.tripDate)) {
+            //dbCollection.insert(tripDate: tripDate, description: description)
+            foundTrips << trip
+        }
+    }
+
+    void connectDB() {
+        def config = [
+            server: System.getenv('mongo_server'),
+            port: System.getenv('mongo_port'),
+            database: "carpling",
+            username: System.getenv('mongo_username'),
+            password: System.getenv('mongo_password')
+        ]
+
+        log.info "Connecting to Mongo DB..."
+        def uri = "mongodb://${config.username}:${config.password}@${config.server}:${config.port}/${config.database}"
+        GMongo mongo = new GMongo(new MongoURI(uri))
+        this.db = mongo.getDB(config.database)
+        db.authenticate(config.username, config.password.toCharArray())
+
+        log.info "... connected!"
+    }
+
+    void sendMail(String[] to){
         def props = new Properties()
         props.put("mail.smtps.auth", "true")
 
@@ -125,8 +140,9 @@ class Main {
 
         def msg = new MimeMessage(session)
 
-        msg.setSubject subject
-        msg.setText message
+        msg.setSubject 'Carpling'
+        msg.setFrom(new InternetAddress(System.getenv('email_username'), "Alvaro Sanchez-Mariscal"))
+        msg.setContent buildMessage(), "text/html; charset=utf-8"
         to.each { String email ->
             msg.addRecipient Message.RecipientType.TO, new InternetAddress(email, email)
         }
@@ -138,11 +154,55 @@ class Main {
         def password = System.getenv('email_password')
 
         try {
+            log.info "Sending email..."
             transport.connect (host, username, password)
             transport.sendMessage (msg, msg.getAllRecipients())
         }
         catch (Exception e) {
+            log.error "OOPS"
             e.printStackTrace()
         }
+    }
+
+    String buildMessage() {
+        String message = "No he encontrado nada nuevo desde la última vez."
+        if (this.foundRoundTrip || this.foundOneWay || this.returnTrip) {
+            message = """Hola,
+
+Esto es lo que he encontrado desde la última vez. Recuerda contactar con ellos en
+http://www.carpling.com/es/train/compro-billetes-de-tren-ave
+
+<h2>Ida y vuelta</h2>
+${buildTripCollection(this.foundRoundTrip)}
+
+<h2>Ida</h2>
+${buildTripCollection(this.foundOneWay)}
+
+<h2>Vuelta</h2>
+${buildTripCollection(this.foundReturn)}
+"""
+        }
+        return message
+    }
+
+    String buildTripCollection(List<TrainTrip> foundTrips) {
+        String text =  """
+<h3>${foundTrips.size()} tickets</h3>
+
+"""
+
+        foundTrips.each {TrainTrip trip ->
+
+            text += """
+<strong>Fecha</strong>: ${trip.tripDate}<br/>
+${trip.description}
+<hr/>
+"""
+
+        }
+
+        return text
+
+
     }
 }

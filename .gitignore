@@ -3,3 +3,4 @@
 *.iml
 build/
 drivers/
+run.sh

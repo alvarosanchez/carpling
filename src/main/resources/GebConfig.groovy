@@ -1,9 +1,9 @@
-import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.firefox.FirefoxDriver
 
 waiting {
-    timeout = 5
+    timeout = 10
 }
-
+/*
 def downloadUrls = [
     'Mac OS X': 'http://chromedriver.storage.googleapis.com/2.8/chromedriver_mac32.zip',
     'Linux':    'http://chromedriver.storage.googleapis.com/2.8/chromedriver_linux64.zip'
@@ -26,4 +26,6 @@ private void downloadDriver(File file, path) {
         ant.chmod(file: file, perm: '700')
     }
 }
+*/
 
+driver = { new FirefoxDriver() }

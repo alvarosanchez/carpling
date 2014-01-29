@@ -17,11 +17,12 @@ dependencies {
 
     // Need a driver implementation
     compile 'org.seleniumhq.selenium:selenium-support:2.39.0'
-    compile "org.seleniumhq.selenium:selenium-chrome-driver:2.39.0"
+    compile "org.seleniumhq.selenium:selenium-firefox-driver:2.39.0"
 
     compile 'com.gmongo:gmongo:1.2'
 
     compile 'javax.mail:mail:1.5.0-b01'
+    compile "log4j:log4j:1.2.14"
 }
 
 mainClassName = "com.github.alvarosanchez.carpling.Main"
